@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -116,12 +116,34 @@ let timerStarted = false;
 let totalShots = 0;
 let photos = [];
 let currentFilter = 0;
-let filters = ["none","grayscale(100%)","sepia(100%)","contrast(120%) saturate(150%) hue-rotate(300deg)"]; // aggiunto black & pink
+let filters = [
+  "none",                                                           // 0: Normal
+  "grayscale(100%)",                                               // 1: B&W
+  "sepia(100%)",                                                   // 2: Sepia
+  "contrast(120%) saturate(150%) hue-rotate(300deg)",             // 3: Black & Pink
+  "invert(100%)",                                                  // 4: Inverted
+  "saturate(200%) contrast(120%)",                                 // 5: Vivid
+  "brightness(110%) contrast(110%) saturate(130%)",                // 6: Bright
+  "sepia(50%) hue-rotate(20deg) saturate(150%)",                  // 7: Vintage Warm
+  "brightness(105%) contrast(95%) saturate(80%) hue-rotate(180deg)", // 8: Cool Blue
+  "contrast(150%) brightness(90%)",                                // 9: High Contrast
+  "saturate(0%) contrast(120%) brightness(110%)",                  // 10: Noir
+  "sepia(100%) saturate(200%) hue-rotate(330deg)",                // 11: Purple Dream
+  "brightness(115%) saturate(150%) hue-rotate(10deg)",            // 12: Sunset
+  "contrast(110%) brightness(105%) saturate(120%) hue-rotate(90deg)", // 13: Green Matrix
+  "saturate(300%) hue-rotate(270deg) contrast(120%)",             // 14: Neon
+  "blur(2px) brightness(110%) saturate(120%)"                      // 15: Soft Focus
+];
+let filterNames = [
+  "Normal", "B&W", "Sepia", "Pink", "Inverted", "Vivid",
+  "Bright", "Vintage", "Cool", "Contrast", "Noir", "Purple",
+  "Sunset", "Matrix", "Neon", "Soft"
+];
 
-// --- ENTER
+// --- ENTER SCENE
 enterBtn.addEventListener('click', async () => {
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    alert("Errore: il tuo dispositivo o browser non supporta la webcam.");
+    alert("Error: Your device or browser does not support webcam.");
     return;
   }
   scene1.classList.replace('visible','hidden');
@@ -132,10 +154,10 @@ enterBtn.addEventListener('click', async () => {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"user" }, audio:false });
     webcam.srcObject = stream;
-  } catch(err) { alert("Errore webcam: "+err.message); }
+  } catch(err) { alert("Webcam error: "+err.message); }
 });
 
-// --- FILTRI
+// --- FILTERS
 document.getElementById('leftArrow').addEventListener('click',()=>{
   currentFilter=(currentFilter+filters.length-1)%filters.length;
   webcam.style.filter=filters[currentFilter];
@@ -145,13 +167,13 @@ document.getElementById('rightArrow').addEventListener('click',()=>{
   webcam.style.filter=filters[currentFilter];
 });
 
-// --- MENU COLLAGE
+// --- COLLAGE MENU
 menuItems.forEach(item => item.addEventListener('click', ()=>{
   menuItems.forEach(i => i.classList.remove('selected'));
   item.classList.add('selected');
 }));
 
-// --- MONETA
+// --- COIN ANIMATION
 function showCoin(x,y){
   coinsImg.style.left=x+'px';
   coinsImg.style.top=y+'px';
@@ -164,10 +186,10 @@ function showCoin(x,y){
   }, 20);
 }
 
-// --- CONTATORE
+// --- PHOTO COUNTER
 function updatePhotoCounter(){ photoCounter.textContent=`${totalShots}/4`; }
 
-// --- TIMER
+// --- TIMER CYCLE
 function startTimerCycle(){
   if(totalShots>=4) return;
   let countdown=3;
@@ -192,7 +214,7 @@ function startTimerCycle(){
   },1000);
 }
 
-// --- SCATTO FOTO
+// --- TAKE PHOTO
 function takePhoto(){
   const canvas=document.createElement('canvas');
   canvas.width=webcam.videoWidth;
@@ -202,7 +224,7 @@ function takePhoto(){
   photos.push(canvas);
 }
 
-// --- DRAW SQUARE
+// --- DRAW SQUARE IMAGE
 function drawSquareImg(ctx,img,x,y,size){
   const s=Math.min(img.width,img.height);
   const sx=(img.width-s)/2;
@@ -210,7 +232,7 @@ function drawSquareImg(ctx,img,x,y,size){
   ctx.drawImage(img,sx,sy,s,s,x,y,size,size);
 }
 
-// --- GENERA COLLAGE
+// --- GENERATE COLLAGE
 function generateCollage(ctxToUse){
   const ctx = ctxToUse || collageCtx;
   if(!ctxToUse) collageCanvas.style.display='block';
@@ -267,7 +289,7 @@ function generateCollage(ctxToUse){
   ctx.filter='none';
 }
 
-// --- INSERT COINS
+// --- INSERT COINS BUTTON
 insertCoinsBtn.addEventListener('click', e=>{
   moneySound.currentTime=0;
   moneySound.play().catch(()=>{});
@@ -276,6 +298,41 @@ insertCoinsBtn.addEventListener('click', e=>{
   showCoin(rect.right+10, rect.top+50);
   if(!timerStarted){ timerStarted=true; startTimerCycle(); }
 });
+
+// --- RESTART FUNCTION
+function restartApp(){
+  // Reset variables
+  timerStarted = false;
+  totalShots = 0;
+  photos = [];
+  currentFilter = 0;
+  webcam.style.filter = filters[currentFilter];
+
+  // Reset UI
+  document.body.style.background = '#dcdcda';
+  photoCounter.textContent = '';
+  messageBox.value = '';
+  timerDiv.style.display = 'none';
+  timerDiv.textContent = '';
+
+  // Remove side menu if exists
+  const existingMenu = document.querySelector('.sideMenu');
+  if(existingMenu) existingMenu.remove();
+
+  // Hide collage
+  collageCanvas.style.display = 'none';
+  collageCanvas.style.animation = '';
+
+  // Show all scene2 elements again
+  document.querySelectorAll('#scene2 > *').forEach(el=>{
+    if(el === collageCanvas) return;
+    el.style.display = '';
+  });
+
+  // Reset collage menu to first option
+  menuItems.forEach(i => i.classList.remove('selected'));
+  menuItems[0].classList.add('selected');
+}
 
 // --- SHOW RESULT + DOWNLOAD
 function showResult(){
@@ -295,6 +352,7 @@ function showResult(){
 
   const sideMenu = document.createElement('div');
   sideMenu.className='sideMenu';
+
   const downloadBtn = document.createElement('button');
   downloadBtn.textContent='Download';
   downloadBtn.addEventListener('click', ()=>{
@@ -327,10 +385,10 @@ function showResult(){
         const sx = (img.width - s)/2;
         const sy = (img.height - s)/2;
 
-        const drawHeight = photoH*0.98;       // spazio ridotto
+        const drawHeight = photoH*0.98;       // reduced spacing
         const drawWidthFinal = drawHeight;
         const offsetX = startX + (drawWidth - drawWidthFinal)/2;
-        const offsetY = i*photoH + photoH*0.01; // quasi nullo
+        const offsetY = i*photoH + photoH*0.01; // minimal spacing
 
         tempCtx.drawImage(img, sx, sy, s, s, offsetX, offsetY, drawWidthFinal, drawHeight);
         tempCtx.lineWidth = 5;
@@ -347,7 +405,12 @@ function showResult(){
     a.click();
   });
 
+  const restartBtn = document.createElement('button');
+  restartBtn.textContent='Restart';
+  restartBtn.addEventListener('click', restartApp);
+
   sideMenu.appendChild(downloadBtn);
+  sideMenu.appendChild(restartBtn);
   scene2.appendChild(sideMenu);
 }
 </script>
