@@ -36,8 +36,6 @@ img.background { width:100%; height:100%; object-fit:cover; }
 
 #photoCounter { position:absolute; font-size:2.5vh; color:white; pointer-events:none; top:2%; left:2%; }
 
-#collageCanvas { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); display:none; width:60vw; height:auto; max-width:70vh; max-height:70vh; }
-
 #timerDiv { position:absolute; font-size:12vh; color:white; pointer-events:none; text-align:center; transform:translate(-50%,-50%); }
 
 .sideMenu { position:absolute; top:50%; right:20%; transform:translateY(-50%); display:flex; flex-direction:column; gap:1.5vh; z-index:10; }
@@ -53,8 +51,6 @@ img.background { width:100%; height:100%; object-fit:cover; }
   #leftMenu { left:10%; top:60%; font-size:3vw; gap:2vw; }
   #leftArrow { left:5%; border-top:3vh solid transparent; border-bottom:3vh solid transparent; border-right:4.5vh solid black; }
   #rightArrow { right:6%; border-top:3vh solid transparent; border-bottom:3vh solid transparent; border-left:4.5vh solid black; }
-  #collageCanvas { width:100vw; max-width:420px; }
-  .sideMenu { right:5%; }
 }
 </style>
 </head>
@@ -83,7 +79,6 @@ img.background { width:100%; height:100%; object-fit:cover; }
     <button id="insertCoinsBtn">START</button>
 
     <div id="photoCounter"></div>
-    <canvas id="collageCanvas" width="1200" height="1200"></canvas>
     <div id="timerDiv"></div>
   </div>
 </div>
@@ -104,8 +99,6 @@ const coinsImg=document.getElementById('coins');
 const insertCoinsBtn=document.getElementById('insertCoinsBtn');
 const menuItems=document.querySelectorAll('#leftMenu .menuItem');
 const photoCounter=document.getElementById('photoCounter');
-const collageCanvas=document.getElementById('collageCanvas');
-const collageCtx=collageCanvas.getContext('2d');
 const timerDiv=document.getElementById('timerDiv');
 
 const moneySound=document.getElementById("moneySound");
@@ -128,7 +121,6 @@ enterBtn.addEventListener('click', async ()=>{
   scene1.classList.replace('visible','hidden');
   scene2.classList.replace('hidden','visible');
 
-  // Se mobile, cambia sfondo della scena 2
   if(window.innerWidth <= 1000){
     scene2Bg.src='automat.png';
   }
@@ -216,75 +208,6 @@ function drawSquareImg(ctx,img,x,y,size){
   ctx.drawImage(img,sx,sy,s,s,x,y,size,size);
 }
 
-// --- GENERA COLLAGE
-function generateCollage(ctxToUse){
-  const ctx = ctxToUse || collageCtx;
-  if(!ctxToUse) collageCanvas.style.display='block';
-  collageCanvas.style.animation='dropIn 1s ease forwards';
-  ctx.clearRect(0,0,collageCanvas.width,collageCanvas.height);
-
-  const choice = document.querySelector('.menuItem.selected').dataset.choice;
-  let startY=0, photoSize=0;
-
-  ctx.filter = filters[currentFilter];
-
-  if(choice === 'classic'){
-    const totalHeight = collageCanvas.height*0.9;
-    photoSize = totalHeight/4;
-    const startX = (collageCanvas.width-photoSize)/2;
-    startY = (collageCanvas.height-totalHeight)/2;
-    for(let i=0;i<4;i++){
-      if(!photos[i]) continue;
-      drawSquareImg(ctx,photos[i],startX,startY+i*photoSize,photoSize);
-      ctx.lineWidth = 5;
-      ctx.strokeStyle = 'black';
-      ctx.strokeRect(startX,startY+i*photoSize,photoSize,photoSize);
-    }
-  } else {
-    photoSize = collageCanvas.width/2;
-    const positions=[[0,0],[photoSize,0],[0,photoSize],[photoSize,photoSize]];
-    for(let i=0;i<4;i++){
-      if(!photos[i]) continue;
-      const [x,y] = positions[i];
-      drawSquareImg(ctx,photos[i],x,y,photoSize);
-      ctx.lineWidth = 5;
-      ctx.strokeStyle = 'black';
-      ctx.strokeRect(x,y,photoSize,photoSize);
-    }
-  }
-
-  if(messageBox.value.trim() !== ''){
-    const msg = messageBox.value;
-    const fontSize = 25;
-    ctx.font = `bold ${fontSize}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const cx = collageCanvas.width/2;
-    const padding = 10;
-    const textMetrics = ctx.measureText(msg);
-    const boxW = textMetrics.width + padding*2;
-    const boxH = fontSize + padding;
-    let boxY = (choice==='classic') ? startY+5 : 20;
-    ctx.fillStyle='black';
-    ctx.fillRect(cx-boxW/2, boxY, boxW, boxH);
-    ctx.fillStyle='white';
-    ctx.fillText(msg, cx, boxY+boxH/2);
-  }
-
-  ctx.filter='none';
-}
-
-// --- INSERT COINS
-insertCoinsBtn.addEventListener('click', e=>{
-  moneySound.currentTime=0;
-  moneySound.play().catch(()=>{});
-  if(navigator.vibrate) navigator.vibrate([80,40,80]);
-  const rect=insertCoinsBtn.getBoundingClientRect();
-  showCoin(rect.right+10, rect.top+50);
-  if(!timerStarted){ timerStarted=true; startTimerCycle(); }
-});
-
-// --- RISULTATO FINALE
 // --- RISULTATO FINALE
 function showResult(){
   if(window.innerWidth <= 1000){
@@ -296,10 +219,8 @@ function showResult(){
   }
 
   document.querySelectorAll('#scene2 > *').forEach(el=>{
-    if(el!==collageCanvas) el.style.display='none';
+    if(el!==webcam && el!==timerDiv) el.style.display='none';
   });
-
-  generateCollage();
 
   // --- MENU FINALE DOWNLOAD
   const sideMenu=document.createElement('div');
@@ -307,55 +228,70 @@ function showResult(){
   const downloadBtn=document.createElement('button');
   downloadBtn.textContent='Download';
   downloadBtn.addEventListener('click',()=>{
-    // Canvas temporaneo per download (solo collage)
-   const tempCanvas = document.createElement('canvas');
-const choice = document.querySelector('.menuItem.selected').dataset.choice;
 
-// Se mobile + classic → formato verticale 1080x1920
-if(window.innerWidth <= 1000 && choice === 'classic'){
-    tempCanvas.width = 1080;
-    tempCanvas.height = 1920;
-} else {
-    tempCanvas.width = collageCanvas.width;
-    tempCanvas.height = collageCanvas.height;
-}
+    const tempCanvas = document.createElement('canvas');
+    const choice = document.querySelector('.menuItem.selected').dataset.choice;
 
-const tempCtx = tempCanvas.getContext('2d');
-tempCtx.clearRect(0,0,tempCanvas.width,tempCanvas.height);
-tempCtx.fillStyle = "rgba(0,0,0,0)";
-tempCtx.fillRect(0,0,tempCanvas.width,tempCanvas.height);
-
-if(window.innerWidth <= 1000 && choice === 'classic'){
-    // Distribuisci le 4 foto verticalmente
-    const photoH = tempCanvas.height / 4;
-    const photoW = tempCanvas.width * 0.8; // padding laterale
-    const startX = (tempCanvas.width - photoW)/2;
-
-    for(let i=0;i<4;i++){
-        if(!photos[i]) continue;
-        const s = Math.min(photos[i].width, photos[i].height);
-        const sx = (photos[i].width-s)/2;
-        const sy = (photos[i].height-s)/2;
-        tempCtx.drawImage(photos[i], sx, sy, s, s, startX, i*photoH + photoH*0.05, photoW, photoH*0.9);
-        tempCtx.lineWidth = 5;
-        tempCtx.strokeStyle = 'black';
-        tempCtx.strokeRect(startX, i*photoH + photoH*0.05, photoW, photoH*0.9);
+    if(window.innerWidth <= 1000 && choice === 'classic'){
+        tempCanvas.width = 1080;
+        tempCanvas.height = 1920;
+    } else {
+        tempCanvas.width = 1200;
+        tempCanvas.height = 1200;
     }
-} else {
-    // Disegna il collage normale (quadrato o desktop)
-    tempCtx.drawImage(collageCanvas,0,0);
-}
 
-// Download
-const a = document.createElement('a');
-a.download = 'collage.png';
-a.href = tempCanvas.toDataURL('image/png');
-a.click();
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.clearRect(0,0,tempCanvas.width,tempCanvas.height);
+    tempCtx.fillStyle = "rgba(0,0,0,0)";
+    tempCtx.fillRect(0,0,tempCanvas.width,tempCanvas.height);
+
+    if(window.innerWidth <= 1000 && choice === 'classic'){
+        const photoH = tempCanvas.height / 4;
+        const photoW = tempCanvas.width * 0.8;
+        const startX = (tempCanvas.width - photoW)/2;
+        for(let i=0;i<4;i++){
+            if(!photos[i]) continue;
+            const s = Math.min(photos[i].width, photos[i].height);
+            const sx = (photos[i].width-s)/2;
+            const sy = (photos[i].height-s)/2;
+            tempCtx.drawImage(photos[i], sx, sy, s, s, startX, i*photoH + photoH*0.05, photoW, photoH*0.9);
+            tempCtx.lineWidth = 5;
+            tempCtx.strokeStyle = 'black';
+            tempCtx.strokeRect(startX, i*photoH + photoH*0.05, photoW, photoH*0.9);
+        }
+    } else {
+        // Quadrato desktop o collage
+        photos.forEach((p,i)=>{
+            const s = Math.min(p.width,p.height);
+            const x = i%2*(tempCanvas.width/2);
+            const y = Math.floor(i/2)*(tempCanvas.height/2);
+            tempCtx.drawImage(p, (p.width-s)/2, (p.height-s)/2, s, s, x, y, tempCanvas.width/2, tempCanvas.height/2);
+            tempCtx.lineWidth = 5;
+            tempCtx.strokeStyle = 'black';
+            tempCtx.strokeRect(x,y,tempCanvas.width/2,tempCanvas.height/2);
+        });
+    }
+
+    const a = document.createElement('a');
+    a.download = 'collage.png';
+    a.href = tempCanvas.toDataURL('image/png');
+    a.click();
+
   });
   sideMenu.appendChild(downloadBtn);
   scene2.appendChild(sideMenu);
 }
 
+// --- INSERT COINS
+insertCoinsBtn.addEventListener('click', e=>{
+  moneySound.currentTime=0;
+  moneySound.play().catch(()=>{});
+  if(navigator.vibrate) navigator.vibrate([80,40,80]);
+  const rect=insertCoinsBtn.getBoundingClientRect();
+  showCoin(rect.right+10, rect.top+50);
+  if(!timerStarted){ timerStarted=true; startTimerCycle(); }
+});
 </script>
+
 </body>
 </html>
