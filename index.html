@@ -14,7 +14,7 @@ html, body { margin:0; padding:0; width:100%; height:100%; font-family:sans-seri
 
 img.background { width:100%; height:100%; object-fit:cover; }
 
-#enterBtn { position:absolute; top:10%; left:49%; transform:translate(-50%,-50%); padding:1vh 2vw; background:#fff642; font-size:4vh; font-weight:bold; border:none; border-radius:12px; cursor:pointer; }
+#enterBtn { position:absolute; top:10%; left:50%; transform:translate(-50%,-50%); padding:1vh 2vw; background:#fff642; font-size:4vh; font-weight:bold; border:none; border-radius:12px; cursor:pointer; }
 
 #webcam { position:absolute; object-fit:cover; border:0.2vw solid black; border-radius:0.2vw; width:30vw; height:28vw; left:50%; top:43%; transform:translate(-50%,-50%); }
 
@@ -46,7 +46,7 @@ img.background { width:100%; height:100%; object-fit:cover; }
 @keyframes dropIn { 0% { transform: translate(-50%, -150%); opacity:0; } 60% { transform: translate(-50%, 10%); opacity:1; } 80% { transform: translate(-50%, -5%) rotate(-2deg); } 100% { transform: translate(-50%, -50%) rotate(1deg); } }
 
 @media screen and (max-width:1000px){
-  #enterBtn{ top:15%; left:49%; transform:translate(-50%,-50%); font-size:6vw; padding:2vw 4vw; }
+  #enterBtn{ top:15%; left:50%; transform:translate(-50%,-50%); font-size:6vw; padding:2vw 4vw; }
   #webcam { width:60vw; height:55vw; }
   #messageBox { width:80vw; font-size:4vw; }
   #insertCoinsBtn { bottom:82%; left:70%; font-size:3vw; padding:1vw 2vw; }
@@ -94,51 +94,45 @@ img.background { width:100%; height:100%; object-fit:cover; }
 <audio id="cameraSound" src="camera.wav"></audio>
 
 <script>
-const scene1=document.getElementById('scene1');
-const scene2=document.getElementById('scene2');
-const scene2Bg=document.getElementById('scene2Bg');
-const enterBtn=document.getElementById('enterBtn');
-const webcam=document.getElementById('webcam');
-const messageBox=document.getElementById('messageBox');
-const coinsImg=document.getElementById('coins');
-const insertCoinsBtn=document.getElementById('insertCoinsBtn');
-const menuItems=document.querySelectorAll('#leftMenu .menuItem');
-const photoCounter=document.getElementById('photoCounter');
-const collageCanvas=document.getElementById('collageCanvas');
-const collageCtx=collageCanvas.getContext('2d');
-const timerDiv=document.getElementById('timerDiv');
+const scene1 = document.getElementById('scene1');
+const scene2 = document.getElementById('scene2');
+const scene2Bg = document.getElementById('scene2Bg');
+const enterBtn = document.getElementById('enterBtn');
+const webcam = document.getElementById('webcam');
+const messageBox = document.getElementById('messageBox');
+const coinsImg = document.getElementById('coins');
+const insertCoinsBtn = document.getElementById('insertCoinsBtn');
+const menuItems = document.querySelectorAll('#leftMenu .menuItem');
+const photoCounter = document.getElementById('photoCounter');
+const collageCanvas = document.getElementById('collageCanvas');
+const collageCtx = collageCanvas.getContext('2d');
+const timerDiv = document.getElementById('timerDiv');
 
-const moneySound=document.getElementById("moneySound");
-const beep=document.getElementById("beepSound");
-const cameraSound=document.getElementById("cameraSound");
+const moneySound = document.getElementById("moneySound");
+const beep = document.getElementById("beepSound");
+const cameraSound = document.getElementById("cameraSound");
 
-let timerStarted=false;
-let totalShots=0;
-let photos=[];
-let currentFilter=0;
-let filters=["none","grayscale(100%)","sepia(100%)"];
+let timerStarted = false;
+let totalShots = 0;
+let photos = [];
+let currentFilter = 0;
+let filters = ["none","grayscale(100%)","sepia(100%)"];
 
 // --- ENTER
-enterBtn.addEventListener('click', async ()=>{
+enterBtn.addEventListener('click', async () => {
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
     alert("Errore: il tuo dispositivo o browser non supporta la webcam.");
     return;
   }
-
   scene1.classList.replace('visible','hidden');
   scene2.classList.replace('hidden','visible');
 
-  // Se mobile, cambia sfondo della scena 2
-  if(window.innerWidth <= 1000){
-    scene2Bg.src='automat.png';
-  }
+  if(window.innerWidth <= 1000) scene2Bg.src='automat.png';
 
-  try{
+  try {
     const stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"user" }, audio:false });
     webcam.srcObject = stream;
-  }catch(err){
-    alert("Errore webcam: "+err.message);
-  }
+  } catch(err) { alert("Errore webcam: "+err.message); }
 });
 
 // --- FILTRI
@@ -152,8 +146,8 @@ document.getElementById('rightArrow').addEventListener('click',()=>{
 });
 
 // --- MENU COLLAGE
-menuItems.forEach(item=>item.addEventListener('click',()=>{
-  menuItems.forEach(i=>i.classList.remove('selected'));
+menuItems.forEach(item => item.addEventListener('click', ()=>{
+  menuItems.forEach(i => i.classList.remove('selected'));
   item.classList.add('selected');
 }));
 
@@ -225,7 +219,6 @@ function generateCollage(ctxToUse){
 
   const choice = document.querySelector('.menuItem.selected').dataset.choice;
   let startY=0, photoSize=0;
-
   ctx.filter = filters[currentFilter];
 
   if(choice === 'classic'){
@@ -284,8 +277,7 @@ insertCoinsBtn.addEventListener('click', e=>{
   if(!timerStarted){ timerStarted=true; startTimerCycle(); }
 });
 
-// --- RISULTATO FINALE
-// --- RISULTATO FINALE
+// --- SHOW RESULT + DOWNLOAD
 function showResult(){
   if(window.innerWidth <= 1000){
     document.body.style.background="url('automat4.png') no-repeat center center fixed";
@@ -301,71 +293,63 @@ function showResult(){
 
   generateCollage();
 
-  // --- MENU FINALE DOWNLOAD
-  const sideMenu=document.createElement('div');
+  const sideMenu = document.createElement('div');
   sideMenu.className='sideMenu';
-  const downloadBtn=document.createElement('button');
+  const downloadBtn = document.createElement('button');
   downloadBtn.textContent='Download';
-  downloadBtn.addEventListener('click',()=>{
-    // Canvas temporaneo per download (solo collage)
-// Canvas temporaneo per download
-const tempCanvas = document.createElement('canvas');
-const choice = document.querySelector('.menuItem.selected').dataset.choice;
+  downloadBtn.addEventListener('click', ()=>{
+    const tempCanvas = document.createElement('canvas');
+    const choice = document.querySelector('.menuItem.selected').dataset.choice;
 
-// Imposta dimensioni
-if(window.innerWidth <= 1000 && choice === 'classic'){
-    // Classic su mobile → 4:5 verticale
-    tempCanvas.width = 1080;
-    tempCanvas.height = 1350; // 1080 * 5/4
-} else {
-    tempCanvas.width = collageCanvas.width;
-    tempCanvas.height = collageCanvas.height;
-}
+    if(window.innerWidth <= 1000 && choice === 'classic'){
+      tempCanvas.width = 1080;
+      tempCanvas.height = 1350; // 4:5
+    } else {
+      tempCanvas.width = collageCanvas.width;
+      tempCanvas.height = collageCanvas.height;
+    }
 
-const tempCtx = tempCanvas.getContext('2d');
-tempCtx.clearRect(0,0,tempCanvas.width,tempCanvas.height);
-tempCtx.fillStyle = "rgba(0,0,0,0)";
-tempCtx.fillRect(0,0,tempCanvas.width,tempCanvas.height);
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.clearRect(0,0,tempCanvas.width,tempCanvas.height);
+    tempCtx.fillStyle = "rgba(0,0,0,0)";
+    tempCtx.fillRect(0,0,tempCanvas.width,tempCanvas.height);
 
-// Disegna le foto proporzionalmente
-if(window.innerWidth <= 1000 && choice === 'classic'){
-    const photoH = tempCanvas.height / 4;
-    const paddingX = 50; // padding laterale
-    const startX = paddingX;
-    const drawWidth = tempCanvas.width - 2*paddingX;
+    if(window.innerWidth <= 1000 && choice === 'classic'){
+      const photoH = tempCanvas.height / 4;
+      const paddingX = 50;
+      const startX = paddingX;
+      const drawWidth = tempCanvas.width - 2*paddingX;
 
-    for(let i=0;i<4;i++){
+      for(let i=0;i<4;i++){
         if(!photos[i]) continue;
         const img = photos[i];
-        const s = Math.min(img.width, img.height); // crop quadrato
+        const s = Math.min(img.width, img.height);
         const sx = (img.width - s)/2;
         const sy = (img.height - s)/2;
-        const aspect = s / s; // è 1:1, quindi mantenuto
-        const drawHeight = photoH*0.9; // piccolo margine verticale
+
+        const drawHeight = photoH*0.9;
         const drawWidthFinal = drawHeight; // quadrato
-        const offsetX = startX + (drawWidth - drawWidthFinal)/2; // centra la foto
+        const offsetX = startX + (drawWidth - drawWidthFinal)/2;
         const offsetY = i*photoH + photoH*0.05;
+
         tempCtx.drawImage(img, sx, sy, s, s, offsetX, offsetY, drawWidthFinal, drawHeight);
         tempCtx.lineWidth = 5;
         tempCtx.strokeStyle = 'black';
         tempCtx.strokeRect(offsetX, offsetY, drawWidthFinal, drawHeight);
+      }
+    } else {
+      tempCtx.drawImage(collageCanvas,0,0);
     }
-} else {
-    // Collage o classic desktop → disegna come il canvas originale
-    tempCtx.drawImage(collageCanvas,0,0);
-}
 
-// Download
-const a = document.createElement('a');
-a.download = 'collage.png';
-a.href = tempCanvas.toDataURL('image/png');
-a.click();
-
+    const a = document.createElement('a');
+    a.download = 'collage.png';
+    a.href = tempCanvas.toDataURL('image/png');
+    a.click();
   });
+
   sideMenu.appendChild(downloadBtn);
   scene2.appendChild(sideMenu);
 }
-
 </script>
 </body>
 </html>
