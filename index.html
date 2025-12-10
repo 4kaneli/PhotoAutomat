@@ -14,7 +14,7 @@ html, body { margin:0; padding:0; width:100%; height:100%; font-family:sans-seri
 
 img.background { width:100%; height:100%; object-fit:cover; }
 
-#enterBtn { position:absolute; top:10%; left:50%; transform:translate(-50%,-50%); padding:1vh 2vw; background:#fff642; font-size:4vh; font-weight:bold; border:none; border-radius:12px; cursor:pointer; }
+#enterBtn { position:absolute; top:10%; left:49%; transform:translate(-50%,-50%); padding:1vh 2vw; background:#fff642; font-size:4vh; font-weight:bold; border:none; border-radius:12px; cursor:pointer; }
 
 #webcam { position:absolute; object-fit:cover; border:0.2vw solid black; border-radius:0.2vw; width:30vw; height:28vw; left:50%; top:43%; transform:translate(-50%,-50%); }
 
@@ -297,37 +297,48 @@ function showResult(){
   sideMenu.className='sideMenu';
   const downloadBtn = document.createElement('button');
   downloadBtn.textContent='Download';
-  downloadBtn.addEventListener('click', ()=>{
-    const tempCanvas = document.createElement('canvas');
-    const choice = document.querySelector('.menuItem.selected').dataset.choice;
+  downloadBtn.addEventListener('click', () => {
+  const tempCanvas = document.createElement('canvas');
+  const choice = document.querySelector('.menuItem.selected').dataset.choice;
 
-    if(window.innerWidth <= 1000 && choice === 'classic'){
-  const photoH = tempCanvas.height / 4;
-  const startX = 0;
-  const drawWidth = tempCanvas.width;
+  if(window.innerWidth <= 1000 && choice === 'classic'){
+    // formato 4:5 verticale
+    tempCanvas.width = 1080;
+    tempCanvas.height = 1350; // 1080*5/4
+    const photoH = tempCanvas.height / 4;
 
-  for(let i=0;i<4;i++){
-    if(!photos[i]) continue;
-    const img = photos[i];
-    const s = Math.min(img.width, img.height);
-    const sx = (img.width - s)/2;
-    const sy = (img.height - s)/2;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+    tempCtx.fillStyle = "rgba(0,0,0,0)";
+    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
-    const drawHeight = photoH; // piena altezza senza spazi
-    tempCtx.drawImage(img, sx, sy, s, s, startX, i*photoH, drawWidth, drawHeight);
-    tempCtx.lineWidth = 5;
-    tempCtx.strokeStyle = 'black';
-    tempCtx.strokeRect(startX, i*photoH, drawWidth, drawHeight);
+    for(let i=0;i<4;i++){
+      if(!photos[i]) continue;
+      const img = photos[i];
+      const s = Math.min(img.width, img.height);
+      const sx = (img.width - s)/2;
+      const sy = (img.height - s)/2;
+
+      tempCtx.drawImage(img, sx, sy, s, s, 0, i*photoH, tempCanvas.width, photoH);
+      tempCtx.lineWidth = 5;
+      tempCtx.strokeStyle = 'black';
+      tempCtx.strokeRect(0, i*photoH, tempCanvas.width, photoH);
+    }
+
+  } else {
+    // desktop o collage quadrato
+    tempCanvas.width = collageCanvas.width;
+    tempCanvas.height = collageCanvas.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.drawImage(collageCanvas, 0, 0);
   }
-} else {
-  tempCtx.drawImage(collageCanvas,0,0);
-}
 
-const a = document.createElement('a');
-a.download = 'collage.png';
-a.href = tempCanvas.toDataURL('image/png');
-a.click();
-  });
+  // trigger download
+  const a = document.createElement('a');
+  a.download = 'collage.png';
+  a.href = tempCanvas.toDataURL('image/png');
+  a.click();
+});
 
   sideMenu.appendChild(downloadBtn);
   scene2.appendChild(sideMenu);
