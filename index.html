@@ -302,15 +302,11 @@ function showResult(){
   const choice = document.querySelector('.menuItem.selected').dataset.choice;
 
   if(window.innerWidth <= 1000 && choice === 'classic'){
-    // formato 4:5 verticale
     tempCanvas.width = 1080;
-    tempCanvas.height = 1350; // 1080*5/4
+    tempCanvas.height = 1350; // 4:5
     const photoH = tempCanvas.height / 4;
-
     const tempCtx = tempCanvas.getContext('2d');
-    tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
-    tempCtx.fillStyle = "rgba(0,0,0,0)";
-    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    tempCtx.clearRect(0,0,tempCanvas.width,tempCanvas.height);
 
     for(let i=0;i<4;i++){
       if(!photos[i]) continue;
@@ -324,21 +320,28 @@ function showResult(){
       tempCtx.strokeStyle = 'black';
       tempCtx.strokeRect(0, i*photoH, tempCanvas.width, photoH);
     }
-
   } else {
-    // desktop o collage quadrato
     tempCanvas.width = collageCanvas.width;
     tempCanvas.height = collageCanvas.height;
     const tempCtx = tempCanvas.getContext('2d');
-    tempCtx.drawImage(collageCanvas, 0, 0);
+    tempCtx.drawImage(collageCanvas,0,0);
   }
 
-  // trigger download
-  const a = document.createElement('a');
-  a.download = 'collage.png';
-  a.href = tempCanvas.toDataURL('image/png');
-  a.click();
+  // Safari/iOS workaround
+  const image = tempCanvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+  if(/iP(hone|ad|od)/.test(navigator.userAgent)){
+    // apre in nuova scheda
+    const w = window.open();
+    w.document.write('<img src="'+image+'" style="width:100%"/>');
+  } else {
+    // download normale
+    const a = document.createElement('a');
+    a.download = 'collage.png';
+    a.href = tempCanvas.toDataURL('image/png');
+    a.click();
+  }
 });
+
 
   sideMenu.appendChild(downloadBtn);
   scene2.appendChild(sideMenu);
