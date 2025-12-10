@@ -14,7 +14,7 @@ html, body { margin:0; padding:0; width:100%; height:100%; font-family:sans-seri
 
 img.background { width:100%; height:100%; object-fit:cover; }
 
-#enterBtn { position:absolute; top:10%; left:50%; transform:translate(-50%,-50%); padding:1vh 2vw; background:#fff642; font-size:4vh; font-weight:bold; border:none; border-radius:12px; cursor:pointer; }
+#enterBtn { position:absolute; top:10%; left:4%; transform:translate(-50%,-50%); padding:1vh 2vw; background:#fff642; font-size:4vh; font-weight:bold; border:none; border-radius:12px; cursor:pointer; }
 
 #webcam { position:absolute; object-fit:cover; border:0.2vw solid black; border-radius:0.2vw; width:30vw; height:28vw; left:50%; top:43%; transform:translate(-50%,-50%); }
 
@@ -53,7 +53,7 @@ img.background { width:100%; height:100%; object-fit:cover; }
   #leftMenu { left:10%; top:60%; font-size:3vw; gap:2vw; }
   #leftArrow { left:5%; border-top:3vh solid transparent; border-bottom:3vh solid transparent; border-right:4.5vh solid black; }
   #rightArrow { right:6%; border-top:3vh solid transparent; border-bottom:3vh solid transparent; border-left:4.5vh solid black; }
-  #collageCanvas { width:80vw; max-width:400px; }
+  #collageCanvas { width:100vw; max-width:420px; }
   .sideMenu { right:5%; }
 }
 </style>
@@ -285,6 +285,7 @@ insertCoinsBtn.addEventListener('click', e=>{
 });
 
 // --- RISULTATO FINALE
+// --- RISULTATO FINALE
 function showResult(){
   if(window.innerWidth <= 1000){
     document.body.style.background="url('automat4.png') no-repeat center center fixed";
@@ -311,8 +312,16 @@ function showResult(){
     tempCanvas.width = collageCanvas.width;
     tempCanvas.height = collageCanvas.height;
     const tempCtx = tempCanvas.getContext('2d');
-    tempCtx.drawImage(collageCanvas,0,0);
 
+    // Pulizia completa con trasparenza (fondamentale per mobile)
+    tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+    tempCtx.fillStyle = "rgba(0,0,0,0)";
+    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+    // Disegno il collage sul canvas temporaneo
+    tempCtx.drawImage(collageCanvas, 0, 0);
+
+    // Download
     const a=document.createElement('a');
     a.download='collage.png';
     a.href=tempCanvas.toDataURL('image/png');
@@ -321,6 +330,7 @@ function showResult(){
   sideMenu.appendChild(downloadBtn);
   scene2.appendChild(sideMenu);
 }
+
 </script>
 </body>
 </html>
