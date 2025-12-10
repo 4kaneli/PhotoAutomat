@@ -308,24 +308,49 @@ function showResult(){
   downloadBtn.textContent='Download';
   downloadBtn.addEventListener('click',()=>{
     // Canvas temporaneo per download (solo collage)
-    const tempCanvas = document.createElement('canvas');
+   const tempCanvas = document.createElement('canvas');
+const choice = document.querySelector('.menuItem.selected').dataset.choice;
+
+// Se mobile + classic → formato verticale 1080x1920
+if(window.innerWidth <= 1000 && choice === 'classic'){
+    tempCanvas.width = 1080;
+    tempCanvas.height = 1920;
+} else {
     tempCanvas.width = collageCanvas.width;
     tempCanvas.height = collageCanvas.height;
-    const tempCtx = tempCanvas.getContext('2d');
+}
 
-    // Pulizia completa con trasparenza (fondamentale per mobile)
-    tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
-    tempCtx.fillStyle = "rgba(0,0,0,0)";
-    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+const tempCtx = tempCanvas.getContext('2d');
+tempCtx.clearRect(0,0,tempCanvas.width,tempCanvas.height);
+tempCtx.fillStyle = "rgba(0,0,0,0)";
+tempCtx.fillRect(0,0,tempCanvas.width,tempCanvas.height);
 
-    // Disegno il collage sul canvas temporaneo
-    tempCtx.drawImage(collageCanvas, 0, 0);
+if(window.innerWidth <= 1000 && choice === 'classic'){
+    // Distribuisci le 4 foto verticalmente
+    const photoH = tempCanvas.height / 4;
+    const photoW = tempCanvas.width * 0.8; // padding laterale
+    const startX = (tempCanvas.width - photoW)/2;
 
-    // Download
-    const a=document.createElement('a');
-    a.download='collage.png';
-    a.href=tempCanvas.toDataURL('image/png');
-    a.click();
+    for(let i=0;i<4;i++){
+        if(!photos[i]) continue;
+        const s = Math.min(photos[i].width, photos[i].height);
+        const sx = (photos[i].width-s)/2;
+        const sy = (photos[i].height-s)/2;
+        tempCtx.drawImage(photos[i], sx, sy, s, s, startX, i*photoH + photoH*0.05, photoW, photoH*0.9);
+        tempCtx.lineWidth = 5;
+        tempCtx.strokeStyle = 'black';
+        tempCtx.strokeRect(startX, i*photoH + photoH*0.05, photoW, photoH*0.9);
+    }
+} else {
+    // Disegna il collage normale (quadrato o desktop)
+    tempCtx.drawImage(collageCanvas,0,0);
+}
+
+// Download
+const a = document.createElement('a');
+a.download = 'collage.png';
+a.href = tempCanvas.toDataURL('image/png');
+a.click();
   });
   sideMenu.appendChild(downloadBtn);
   scene2.appendChild(sideMenu);
