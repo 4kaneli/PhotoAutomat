@@ -116,7 +116,7 @@ let timerStarted = false;
 let totalShots = 0;
 let photos = [];
 let currentFilter = 0;
-let filters = ["none","grayscale(100%)","sepia(100%)"];
+let filters = ["none","grayscale(100%)","sepia(100%)","contrast(120%) saturate(150%) hue-rotate(300deg)"]; // aggiunto black & pink
 
 // --- ENTER
 enterBtn.addEventListener('click', async () => {
@@ -297,51 +297,55 @@ function showResult(){
   sideMenu.className='sideMenu';
   const downloadBtn = document.createElement('button');
   downloadBtn.textContent='Download';
-  downloadBtn.addEventListener('click', () => {
-  const tempCanvas = document.createElement('canvas');
-  const choice = document.querySelector('.menuItem.selected').dataset.choice;
+  downloadBtn.addEventListener('click', ()=>{
+    const tempCanvas = document.createElement('canvas');
+    const choice = document.querySelector('.menuItem.selected').dataset.choice;
 
-  if(window.innerWidth <= 1000 && choice === 'classic'){
-    tempCanvas.width = 1080;
-    tempCanvas.height = 1350; // 4:5
-    const photoH = tempCanvas.height / 4;
+    if(window.innerWidth <= 1000 && choice === 'classic'){
+      tempCanvas.width = 1080;
+      tempCanvas.height = 1350; // 4:5
+    } else {
+      tempCanvas.width = collageCanvas.width;
+      tempCanvas.height = collageCanvas.height;
+    }
+
     const tempCtx = tempCanvas.getContext('2d');
     tempCtx.clearRect(0,0,tempCanvas.width,tempCanvas.height);
+    tempCtx.fillStyle = "rgba(0,0,0,0)";
+    tempCtx.fillRect(0,0,tempCanvas.width,tempCanvas.height);
 
-    for(let i=0;i<4;i++){
-      if(!photos[i]) continue;
-      const img = photos[i];
-      const s = Math.min(img.width, img.height);
-      const sx = (img.width - s)/2;
-      const sy = (img.height - s)/2;
+    if(window.innerWidth <= 1000 && choice === 'classic'){
+      const photoH = tempCanvas.height / 4;
+      const paddingX = 50;
+      const startX = paddingX;
+      const drawWidth = tempCanvas.width - 2*paddingX;
 
-      tempCtx.drawImage(img, sx, sy, s, s, 0, i*photoH, tempCanvas.width, photoH);
-      tempCtx.lineWidth = 5;
-      tempCtx.strokeStyle = 'black';
-      tempCtx.strokeRect(0, i*photoH, tempCanvas.width, photoH);
+      for(let i=0;i<4;i++){
+        if(!photos[i]) continue;
+        const img = photos[i];
+        const s = Math.min(img.width, img.height);
+        const sx = (img.width - s)/2;
+        const sy = (img.height - s)/2;
+
+        const drawHeight = photoH*0.98;       // spazio ridotto
+        const drawWidthFinal = drawHeight;
+        const offsetX = startX + (drawWidth - drawWidthFinal)/2;
+        const offsetY = i*photoH + photoH*0.01; // quasi nullo
+
+        tempCtx.drawImage(img, sx, sy, s, s, offsetX, offsetY, drawWidthFinal, drawHeight);
+        tempCtx.lineWidth = 5;
+        tempCtx.strokeStyle = 'black';
+        tempCtx.strokeRect(offsetX, offsetY, drawWidthFinal, drawHeight);
+      }
+    } else {
+      tempCtx.drawImage(collageCanvas,0,0);
     }
-  } else {
-    tempCanvas.width = collageCanvas.width;
-    tempCanvas.height = collageCanvas.height;
-    const tempCtx = tempCanvas.getContext('2d');
-    tempCtx.drawImage(collageCanvas,0,0);
-  }
 
-  // Safari/iOS workaround
-  const image = tempCanvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
-  if(/iP(hone|ad|od)/.test(navigator.userAgent)){
-    // apre in nuova scheda
-    const w = window.open();
-    w.document.write('<img src="'+image+'" style="width:100%"/>');
-  } else {
-    // download normale
     const a = document.createElement('a');
     a.download = 'collage.png';
     a.href = tempCanvas.toDataURL('image/png');
     a.click();
-  }
-});
-
+  });
 
   sideMenu.appendChild(downloadBtn);
   scene2.appendChild(sideMenu);
