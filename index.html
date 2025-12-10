@@ -67,7 +67,7 @@ img.background { width:100%; height:100%; object-fit:cover; }
   </div>
 
   <div id="scene2" class="scene hidden">
-    <img src="automat2.png" class="background">
+    <img id="scene2Bg" src="automat2.png" class="background">
     <video id="webcam" autoplay playsinline></video>
 
     <div id="leftMenu">
@@ -96,6 +96,7 @@ img.background { width:100%; height:100%; object-fit:cover; }
 <script>
 const scene1=document.getElementById('scene1');
 const scene2=document.getElementById('scene2');
+const scene2Bg=document.getElementById('scene2Bg');
 const enterBtn=document.getElementById('enterBtn');
 const webcam=document.getElementById('webcam');
 const messageBox=document.getElementById('messageBox');
@@ -126,6 +127,11 @@ enterBtn.addEventListener('click', async ()=>{
 
   scene1.classList.replace('visible','hidden');
   scene2.classList.replace('hidden','visible');
+
+  // Se mobile, cambia sfondo della scena 2
+  if(window.innerWidth <= 1000){
+    scene2Bg.src='automat.png';
+  }
 
   try{
     const stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"user" }, audio:false });
@@ -300,9 +306,16 @@ function showResult(){
   const downloadBtn=document.createElement('button');
   downloadBtn.textContent='Download';
   downloadBtn.addEventListener('click',()=>{
+    // Canvas temporaneo per download (solo collage)
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = collageCanvas.width;
+    tempCanvas.height = collageCanvas.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.drawImage(collageCanvas,0,0);
+
     const a=document.createElement('a');
     a.download='collage.png';
-    a.href=collageCanvas.toDataURL('image/png');
+    a.href=tempCanvas.toDataURL('image/png');
     a.click();
   });
   sideMenu.appendChild(downloadBtn);
